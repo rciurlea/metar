@@ -12,7 +12,8 @@ import (
 const apiURL = "https://aviationweather.gov/adds/dataserver_current/httpparam?datasource=metars&requestType=retrieve&format=xml&mostRecentForEachStation=constraint&hoursBeforeNow=1.25&stationString=LRSV%20LRBS%20LRAR%20LRCV%20LRCK%20EBOS"
 
 type metar struct {
-	RawText string `xml:"raw_text"`
+	RawText   string `xml:"raw_text"`
+	FlightCat string `xml:"flight_category"`
 }
 
 type byStation []metar
