@@ -42,7 +42,7 @@ func main() {
 	fmt.Println(len(metars))
 	sort.Sort(byStation(metars))
 	for _, met := range metars {
-		fmt.Println(met.RawText)
+		fmt.Printf("%-4s %s\n", met.FlightCat, met.RawText)
 	}
 }
 
