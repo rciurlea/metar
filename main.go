@@ -7,13 +7,25 @@ import (
 	"log"
 	"net/http"
 	"sort"
+	"time"
+
+	"github.com/fatih/color"
 )
 
-const apiURL = "https://aviationweather.gov/adds/dataserver_current/httpparam?datasource=metars&requestType=retrieve&format=xml&mostRecentForEachStation=constraint&hoursBeforeNow=1.25&stationString=LRSV%20LRBS%20LRAR%20LRCV%20LRCK%20EBOS"
+const apiURL = "https://aviationweather.gov/adds/dataserver_current/httpparam?datasource=metars&requestType=retrieve&format=xml&mostRecentForEachStation=constraint&hoursBeforeNow=1.25&stationString=LRBS%20LRCT%20LRCK%20LRSB"
 
 type metar struct {
-	RawText   string `xml:"raw_text"`
-	FlightCat string `xml:"flight_category"`
+	RawText   string    `xml:"raw_text"`
+	StationID string    `xml:"station_id"`
+	Time      time.Time `xml:"observation_time"`
+	Temp      float64   `xml:"temp_c"`
+	Dewpoint  float64   `xml:"dewpoint_c"`
+	WDir      int       `xml:"wind_dir_degrees"`
+	WSpd      int       `xml:"wind_speed_kt"`
+	VisSM     float64   `xml:"visibility_statute_mi"`
+	QNHHg     float64   `xml:"altim_in_hg"`
+	WX        string    `xml:"wx_string"`
+	FlightCat string    `xml:"flight_category"`
 }
 
 type byStation []metar
@@ -39,11 +51,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(len(metars))
+	fmt.Println()
 	sort.Sort(byStation(metars))
 	for _, met := range metars {
-		fmt.Printf("%-4s %s\n", met.FlightCat, met.RawText)
+		printMetarSimple(met)
 	}
+	fmt.Println()
 }
 
 func generateMetars(xmlText []byte) ([]metar, error) {
@@ -56,4 +69,26 @@ func generateMetars(xmlText []byte) ([]metar, error) {
 		return nil, fmt.Errorf("couldn't parse XML response: %v", err)
 	}
 	return response.Data, nil
+}
+
+func printMetarSimple(m metar) {
+	printer := getColorPrinter(m.FlightCat)
+	printer.Printf("%-4s ", m.FlightCat)
+	fmt.Println(m.RawText, m.Time)
+}
+
+func printMetarFull(m metar) {
+
+}
+
+func getColorPrinter(flightCat string) *color.Color {
+	switch flightCat {
+	case "VFR", "MVFR":
+		return color.New(color.FgGreen, color.Bold)
+	case "IFR":
+		return color.New(color.FgBlue, color.Bold)
+	case "LIFR":
+		return color.New(color.FgRed, color.Bold)
+	}
+	return color.New(color.BgBlack)
 }
