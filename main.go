@@ -44,9 +44,9 @@ func (s byStation) Less(i, j int) bool { return s[i].RawText < s[j].RawText }
 
 func main() {
 
-	airports, err := getSettingsCmdLine()
+	airports, err := getSettingsDotFile()
 	if err != nil {
-		log.Fatal("usage: metar ICAO1 ICAO2 ...")
+		log.Fatal(err)
 	}
 	queryString := apiURL + airports
 
@@ -70,6 +70,7 @@ func main() {
 	sort.Sort(byStation(metars))
 	for _, met := range metars {
 		printMetarSimple(met)
+		printMetarFull(met)
 	}
 	fmt.Println()
 }
@@ -117,7 +118,7 @@ func getSettingsDotFile() (string, error) {
 
 	contents, err := ioutil.ReadAll(file)
 	if err != nil {
-		return "", fmt.Errorf("can't read: %v", err)
+		return "", err
 	}
 
 	type config struct {
@@ -128,6 +129,7 @@ func getSettingsDotFile() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("can't parse JSON: %v", err)
 	}
+
 	return strings.Join(conf.Stations, "%20"), nil
 }
 
